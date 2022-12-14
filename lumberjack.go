@@ -224,6 +224,11 @@ func (l *Logger) openNew() error {
 		// move the existing file
 		newname := backupName(l.bkdir(), name, l.LocalTime)
 		if err := os.Rename(name, newname); err != nil {
+			// fix linux: invalid cross-device link
+			src1, _ := os.Create(newname)
+			l.file.Close()
+			io.Copy(l.file, src1)
+			os.Remove(name)
 			return fmt.Errorf("can't rename log file: %s", err)
 		}
 
