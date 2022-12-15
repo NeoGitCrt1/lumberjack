@@ -222,15 +222,24 @@ func (l *Logger) openNew() error {
 		// Copy the mode off the old logfile.
 		mode = info.Mode()
 		// move the existing file
-		newname := backupName(l.bkdir(), name, l.LocalTime)
-		if err := os.Rename(name, newname); err != nil {
-			// fix linux: invalid cross-device link
-			src1, _ := os.Create(newname)
-			l.file.Close()
-			io.Copy(l.file, src1)
-			os.Remove(name)
-			return fmt.Errorf("can't rename log file: %s", err)
+		
+		
+		transferName := name + ".tran"
+
+		if err := os.Rename(name, transferName); err != nil {
+			return fmt.Errorf("can't rename transferName file: %s", err)
 		}
+
+		// fix linux: invalid cross-device link
+		go func()  {
+			backupName := backupName(l.bkdir(), name, l.LocalTime)
+			bkFile, _ := os.Create(backupName)
+			file, _ := os.OpenFile(transferName, os.O_RDONLY, mode)
+			io.Copy(bkFile, file)
+			file.Close()
+			os.Remove(transferName)
+			bkFile.Close()
+		}()
 
 		// this is a no-op anywhere but linux
 		if err := chown(name, info); err != nil {

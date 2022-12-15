@@ -822,16 +822,17 @@ func exists(path string, t testing.TB) {
 func TestLogger_Rotate(t *testing.T) {
 
 	l := &Logger{
-		Filename: "./t.log",
+		Filename: "./2t.log",
 		BackupDir: "./bk",
-		MaxSize: 200,
+		MaxSize: 1,
 		MaxBackups: 2,
 	}
-	log.SetOutput(l)
 
-	for i := 0; i <= 1009000; i++ {
-		log.Println(">>>>>>>>>>>>>>>>>>>>")
+	collectorlogger := log.New(l, "", 0 )
+	
+
+	for i := 0; i <= 100900; i++ {
+		collectorlogger.Printf("%d >>>>>>>>>>>>>>>>>>>>", i)
 	 }
 
-	l.Rotate()
 }
